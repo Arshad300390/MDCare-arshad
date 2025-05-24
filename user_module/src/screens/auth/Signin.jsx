@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useState, useEffect} from 'react';
 import {
   View,
@@ -73,11 +74,19 @@ const Signin = () => {
 
         if (loginUser.fulfilled.match(resultAction)) {
           const {user} = resultAction.payload;
+          console.log('user in signin', user.isSuperAdmin);
           setShowSuccessModal(true);
 
           setTimeout(() => {
             setShowSuccessModal(false);
-            navigation.replace('Main');
+            if(user.isSuperAdmin === true){
+                console.log('goto admin')
+              navigation.replace('AdminDashboard')
+            }else{
+              console.log('goto main')
+              navigation.replace('Main');
+            }
+            
           }, 3000);
         } else {
           const errorMessage =

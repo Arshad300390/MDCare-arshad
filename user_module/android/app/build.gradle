@@ -81,6 +81,11 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.mdcare"
+
+compileOptions {
+	sourceCompatibility JavaVersion.VERSION_1_8
+	targetCompatibility JavaVersion.VERSION_1_8
+}
     defaultConfig {
         applicationId "com.mdcare"
         minSdkVersion rootProject.ext.minSdkVersion

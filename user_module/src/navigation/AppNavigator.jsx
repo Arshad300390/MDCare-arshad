@@ -30,7 +30,9 @@ import Games from '../screens/gamesModule/Games';
 import SpellingBeeGame from '../screens/gamesModule/SpellingBeeGame';
 import MemoryMatchGame from '../screens/gamesModule/MemoryMatchGame';
 import ColorSortGame from '../screens/gamesModule/ColorSortGame';
-
+import AdminDashboard from '../screens/AdminScreen/AdminDashboard';
+import SchoolForm from '../screens/AdminScreen/SchoolForm';
+import ConsultantForm from '../screens/AdminScreen/ConsultantForm';
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -72,6 +74,13 @@ const AppNavigator = () => {
          <Stack.Screen name="Calling" component={Calling} />
         <Stack.Screen name="Receiving" component={Receiving} />
         <Stack.Screen name="InCall" component={InCall} />
+        {/* admin screens */}
+        <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
+        <Stack.Screen name="SchoolForm" component={SchoolForm} />
+        <Stack.Screen name="ConsultantForm" component={ConsultantForm} />
+
+
+
       </Stack.Navigator>
     </>
   );

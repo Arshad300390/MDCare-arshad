@@ -9,6 +9,7 @@ const {
   editConsultantStatus,
   deleteConsultant,
   getAllConsultants,
+  editConsultant
 } = require("../controllers/consultant");
 
 // Define the routes
@@ -18,5 +19,6 @@ router.get("/get-consultant", getAllConsultants);
 router.post("/edit-consultant-waiting-status", editConsultantStatus);
 router.post("/consultant-login", consultantLogin);
 router.post("/delete-consultant", deleteConsultant);
+router.put("/edit-consultant", editConsultant);
 
 module.exports = router;

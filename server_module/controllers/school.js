@@ -16,13 +16,99 @@ const isSuperAdmin = (req, res, next) => {
   next();
 };
 
+// exports.createSchool = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       location,
+//       description,
+//       specialties,
+//       Rating,
+//       email,
+//       password,
+//       phone,
+//     } = req.body;
+
+//     const isThisEmailInUse =
+//       (await Waitinglist.findOne({ email })) ||
+//       (await School.findOne({ email }));
+//     if (isThisEmailInUse) {
+//       return res.status(400).json({ message: "Email already in use" });
+//     }
+//     let imageUrl = null;
+//     if (!!req.file) {
+//       const result = await cloudinary.uploader.upload(req.file.path, {
+//         folder: "schoolPics",
+//         crop: "limit",
+//         width: 800,
+//         height: 800,
+//       });
+//       if (result?.secure_url) {
+//         imageUrl = result.secure_url;
+//       }
+//     }
+
+//     const school = new Waitinglist({
+//       email,
+//       password,
+//       name,
+//       location,
+//       description,
+//       specialties,
+//       Rating,
+//       phone,
+//       ...(imageUrl && { pic: imageUrl }),
+//     });
+//     await school.save();
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "School has been added to the waiting list!",
+//       school,
+//     });
+//   } catch (error) {
+//     console.error("Error creating school:", error.message);
+//     res.status(500).json({ success: false, message: "Server error!" });
+//   }
+// };
+
 exports.createSchool = async (req, res) => {
   try {
+    // Handle location: support both object and flat fields
+    let location = req.body.location;
+    if (
+      req.body['location[type]'] &&
+      req.body['location[coordinates][0]'] !== undefined &&
+      req.body['location[coordinates][1]'] !== undefined
+    ) {
+      location = {
+        type: req.body['location[type]'],
+        coordinates: [
+          parseFloat(req.body['location[coordinates][0]']),
+          parseFloat(req.body['location[coordinates][1]'])
+        ]
+      };
+    } else if (typeof location === 'string') {
+      // If sent as JSON string (sometimes happens with multipart)
+      try {
+        location = JSON.parse(location);
+      } catch (e) {
+        location = undefined;
+      }
+    }
+
+    // Handle specialties: support both array and single string
+    let specialties = req.body['specialties[]'] || req.body.specialties;
+    if (typeof specialties === 'string') {
+      specialties = [specialties];
+    }
+    if (!Array.isArray(specialties)) {
+      specialties = [];
+    }
+
     const {
       name,
-      location,
       description,
-      specialties,
       Rating,
       email,
       password,
@@ -45,6 +131,7 @@ exports.createSchool = async (req, res) => {
       });
       if (result?.secure_url) {
         imageUrl = result.secure_url;
+        console.log(imageUrl);
       }
     }
 
@@ -72,37 +159,38 @@ exports.createSchool = async (req, res) => {
   }
 };
 
+
 exports.getWaitingList = async (req, res) => {
   try {
     let userDetails = null;
 
     // Check if the request has an authorization header
-    const token = req.headers.authorization?.split(" ")[1];
-    if (token) {
-      try {
-        // Verify the token and get user details
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId);
-        if (user) {
-          userDetails = {
-            id: user._id,
-            fullname: user.fullname,
-            email: user.email,
-            isSuperAdmin: user.superAdmin || false,
-          };
-        }
-      } catch (err) {
-        console.warn("Token verification failed:", err.message);
-      }
-    }
+    // const token = req.headers.authorization?.split(" ")[1];
+    // if (token) {
+    //   try {
+    //     // Verify the token and get user details
+    //     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    //     const user = await User.findById(decoded.userId);
+    //     if (user) {
+    //       userDetails = {
+    //         id: user._id,
+    //         fullname: user.fullname,
+    //         email: user.email,
+    //         isSuperAdmin: user.superAdmin || false,
+    //       };
+    //     }
+    //   } catch (err) {
+    //     console.warn("Token verification failed:", err.message);
+    //   }
+    // }
 
     const waitingList = await Waitinglist.find();
-
+console.log(waitingList)
     return res.status(200).json({
       success: true,
       message: "Waiting list retrieved successfully",
       waitingList,
-      userDetails: userDetails || null, // Include user details only if authenticated
+     // userDetails: userDetails || null, // Include user details only if authenticated
     });
   } catch (error) {
     console.error("Error fetching waiting list:", error.message);

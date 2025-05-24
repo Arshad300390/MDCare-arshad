@@ -21,6 +21,7 @@ const waitingListSchema = new mongoose.Schema({
       required: true,
     },
   },
+  pic: { type: String },
 });
 
 waitingListSchema.statics.isThisSchoolEmailInUse = async function (email) {

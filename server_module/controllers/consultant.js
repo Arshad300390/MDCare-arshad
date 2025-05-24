@@ -26,7 +26,19 @@ exports.createConsultant = [
       }
 
       // Create a new consultant
-      const consultant = new Consultant({
+      // const consultant = new Consultant({
+      //   name,
+      //   expertise,
+      //   location,
+      //   bio,
+      //   email,
+      //   password,
+      //   phone
+      // });
+
+      //await consultant.save();
+      //for waiting list
+const consultant = new Waitinglistconsultant({
         name,
         expertise,
         location,
@@ -35,9 +47,8 @@ exports.createConsultant = [
         password,
         phone
       });
-
       await consultant.save();
-
+      //end
       res.status(201).json({
         success: true,
         message: "Consultant created successfully!",
@@ -68,7 +79,7 @@ exports.editConsultant = [
   isAuth,
   async (req, res) => {
     try {
-      const { id, name, expertise, location, bio } = req.body;
+      const { id, name, expertise, location, bio, phone } = req.body;
 
       if (!id) {
         return res

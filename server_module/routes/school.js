@@ -27,7 +27,7 @@ const {
 const { isAuth } = require("../middleware/auth");
 
 // Apply isAuth middleware to routes where authentication is required
-router.post("/create-school", isAuth, createSchool);
+router.post("/create-school", isAuth, uploads.single('profile'), createSchool);
 router.post("/school-waiting-status", isAuth, editSchoolStatus);
 router.get("/waitinglist", getWaitingList);
 router.get("/get-school", getAllSchools); // No auth needed for getting schools

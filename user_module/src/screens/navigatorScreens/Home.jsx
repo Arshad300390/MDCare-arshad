@@ -21,7 +21,12 @@ const Home = () => {
   const dispatch = useDispatch();
 
   const user = useSelector(state => state.auth.user);
-
+// Redirect admin users to AdminDashboard
+  useEffect(() => {
+    if (user && user.isSuperAdmin) {
+      navigation.replace('AdminDashboard');
+    }
+  }, [user, navigation]);
 
   useEffect(() => {
     if (user && user.id) {

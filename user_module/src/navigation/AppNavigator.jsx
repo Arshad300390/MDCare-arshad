@@ -33,6 +33,7 @@ import ColorSortGame from '../screens/gamesModule/ColorSortGame';
 import AdminDashboard from '../screens/AdminScreen/AdminDashboard';
 import SchoolForm from '../screens/AdminScreen/SchoolForm';
 import ConsultantForm from '../screens/AdminScreen/ConsultantForm';
+import UserForm from '../screens/AdminScreen/UserForm';
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -78,7 +79,7 @@ const AppNavigator = () => {
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
         <Stack.Screen name="SchoolForm" component={SchoolForm} />
         <Stack.Screen name="ConsultantForm" component={ConsultantForm} />
-
+        <Stack.Screen name="UserForm" component={UserForm} />
 
 
       </Stack.Navigator>

@@ -24,7 +24,7 @@ const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 44 : StatusBar.currentHeight ||
 
 const menuItems = [
   { label: 'Dashboard', icon: <Icon name="grid" size={22} color="#fff" /> },
-  { label: 'Chats', icon: <Icon name="chatbubble-ellipses" size={22} color="#fff" /> },
+  // { label: 'Chats', icon: <Icon name="chatbubble-ellipses" size={22} color="#fff" /> },
   { label: 'Users', icon: <Icon name="people" size={22} color="#fff" /> },
   { label: 'Schools', icon: <Icon name="school" size={22} color="#fff" /> },
   { label: 'Consultants', icon: <FontAwesome5 name="user-tie" size={20} color="#fff" /> },

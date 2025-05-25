@@ -31,8 +31,8 @@ router.post("/create-school", isAuth, uploads.single('profile'), createSchool);
 router.post("/school-waiting-status", isAuth, editSchoolStatus);
 router.get("/waitinglist", getWaitingList);
 router.get("/get-school", getAllSchools); // No auth needed for getting schools
-router.delete("/delete-school", isAuth, deleteSchool);
-router.put("/edit-school", isAuth, editSchool);
+router.post("/delete-school", isAuth, deleteSchool);
+router.put("/edit-school", isAuth, uploads.single('profile'), editSchool);
 router.post("/school-login", schoolLogin); // No auth needed for school login
 router.put("/update-school-pic", isAuth, uploads.single('profile'), updateSchoolProfile);
 

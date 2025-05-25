@@ -15,6 +15,9 @@ const {
   getUser, // Added getUser controller
   getUserById,
   getResetPasswordForm, // Added getUserById controller
+  createUserByAdmin,
+  editUserByAdmin,
+  deleteUserByAdmin,
 } = require("../controllers/user");
 const { isAuth } = require("../middleware/auth");
 const {
@@ -37,6 +40,13 @@ const fileFilter = (req, file, cb) => {
 const uploads = multer({ storage, fileFilter });
 
 router.post("/sign-up", validateUserSignUp, userVlidation, createUser);
+router.post(
+  "/create-user",
+  uploads.single('avatar'),      
+  validateUserSignUp,           
+  userVlidation,
+  createUserByAdmin
+);
 router.post("/sign-in", validateUserSignIn, userVlidation, userSignIn);
 router.post("/sign-out", isAuth, signOut);
 // router.post('/reset-password', resetPassword);
@@ -46,7 +56,7 @@ router.post(
   uploads.single("profile"),
   uploadProfile,
 );
-
+router.put("/edit-user", uploads.single('avatar'), editUserByAdmin);
 router.post("/forgot-password", forgotPassword);
 router.post("/search-school", SearchSchool);
 router.post("/search-consultant", SearchConsultant);
@@ -92,5 +102,5 @@ router.patch("/reset-password/:resetToken", async (req, res) => {
 // Routes for getUser and getUserById
 router.get("/get-users", isAuth, getUser); // Get all users
 router.get("/get-user-by-id/:id", isAuth, getUserById); // Get user by ID
-
+router.delete("/delete-user/:userId", isAuth, deleteUserByAdmin);
 module.exports = router;

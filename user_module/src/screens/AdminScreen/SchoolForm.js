@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import {
-  StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image
+  StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image, Platform, StatusBar
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import CONFIG from '../../redux/config/Config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { theme } from '../../styles/theme';
 
 const { BASE_URL } = CONFIG;
 
@@ -60,6 +62,7 @@ const SchoolForm = () => {
     setLoading(true);
     try {
       const formData = new FormData();
+      if (editingSchool) formData.append('id', editingSchool._id); // <-- always send id for edit
       formData.append('name', name);
       formData.append('email', email);
       if (!editingSchool) formData.append('password', password);
@@ -75,6 +78,7 @@ const SchoolForm = () => {
       formData.append('location[coordinates][0]', parseFloat(longitude)); // longitude first
       formData.append('location[coordinates][1]', parseFloat(latitude));  // latitude second
 
+      // Only append image if user picked a new one
       if (image) {
         formData.append('profile', {
           uri: image.uri,
@@ -85,7 +89,7 @@ const SchoolForm = () => {
 
       let url, method;
       if (editingSchool) {
-        url = `${BASE_URL}/school/update/${editingSchool._id}`;
+        url = `${BASE_URL}/school/edit-school`; // <-- use your new endpoint
         method = 'put';
       } else {
         url = `${BASE_URL}/school/create-school`;
@@ -117,100 +121,126 @@ const SchoolForm = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{editingSchool ? 'Edit School' : 'Add School'}</Text>
-
-      <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-        {image ? (
-          <Image source={{ uri: image.uri }} style={styles.image} />
-        ) : existingImage ? (
-          <Image source={{ uri: existingImage }} style={styles.image} />
-        ) : (
-          <Icon name="image-outline" size={40} color="#888" />
-        )}
-        <Text style={styles.imagePickerText}>Pick Image</Text>
-      </TouchableOpacity>
-
-      <TextInput
-        style={styles.input}
-        placeholder="School Name"
-        value={name}
-        onChangeText={setName}
+    <View style={{ flex: 1, backgroundColor: '#F7F7F7' }}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        onChangeText={setEmail}
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.secondary]}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: Platform.OS === 'ios' ? 44 : StatusBar.currentHeight || 24,
+          zIndex: 1,
+        }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       />
-      {!editingSchool && (
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Feather name="arrow-left" size={26} color="#035B60" />
+          </TouchableOpacity>
+          <Text style={styles.title}>{editingSchool ? 'Edit School' : 'Add School'}</Text>
+          <View />
+        </View>
+
+        <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+          {image ? (
+            <Image source={{ uri: image.uri }} style={styles.image} />
+          ) : existingImage ? (
+            <Image source={{ uri: existingImage }} style={styles.image} />
+          ) : (
+            <Icon name="image-outline" size={40} color="#888" />
+          )}
+          <Text style={styles.imagePickerText}>Pick Image</Text>
+        </TouchableOpacity>
+
         <TextInput
           style={styles.input}
-          placeholder="Password"
-          value={password}
-          secureTextEntry
-          onChangeText={setPassword}
-        />
-      )}
-      <TextInput
-        style={styles.input}
-        placeholder="Phone"
-        value={phone}
-        keyboardType="phone-pad"
-        onChangeText={setPhone}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Specialties (comma separated)"
-        value={specialties}
-        onChangeText={setSpecialties}
-      />
-      <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
-        <TextInput
-          style={[styles.input, { flex: 1, marginRight: 6 }]}
-          placeholder="Latitude"
-          value={latitude}
-          keyboardType="numeric"
-          onChangeText={setLatitude}
+          placeholder="School Name"
+          value={name}
+          onChangeText={setName}
         />
         <TextInput
-          style={[styles.input, { flex: 1, marginLeft: 6 }]}
-          placeholder="Longitude"
-          value={longitude}
-          keyboardType="numeric"
-          onChangeText={setLongitude}
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          onChangeText={setEmail}
         />
-      </View>
+        {!editingSchool && (
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            secureTextEntry
+            onChangeText={setPassword}
+          />
+        )}
+        <TextInput
+          style={styles.input}
+          placeholder="Phone"
+          value={phone}
+          keyboardType="phone-pad"
+          onChangeText={setPhone}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Description"
+          value={description}
+          onChangeText={setDescription}
+          multiline
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Specialties (comma separated)"
+          value={specialties}
+          onChangeText={setSpecialties}
+        />
+        <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 6 }]}
+            placeholder="Latitude"
+            value={latitude}
+            keyboardType="numeric"
+            onChangeText={setLatitude}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1, marginLeft: 6 }]}
+            placeholder="Longitude"
+            value={longitude}
+            keyboardType="numeric"
+            onChangeText={setLongitude}
+          />
+        </View>
 
-      <TouchableOpacity
-        style={styles.submitBtn}
-        onPress={handleSubmit}
-        disabled={loading}
-        activeOpacity={0.8}
-      >
-        <LinearGradient
-          colors={['#07BBC6', '#035B60']}
-          style={styles.submitGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <TouchableOpacity
+          style={styles.submitBtn}
+          onPress={handleSubmit}
+          disabled={loading}
+          activeOpacity={0.8}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitText}>{editingSchool ? 'Update' : 'Create'}</Text>
-          )}
-        </LinearGradient>
-      </TouchableOpacity>
-    </ScrollView>
+          <LinearGradient
+            colors={['#07BBC6', '#035B60']}
+            style={styles.submitGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitText}>{editingSchool ? 'Update' : 'Create'}</Text>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -270,5 +300,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 50,
+    marginBottom: 18,
+  },
+  backBtn: {
+    marginRight: 10,
+    padding: 4,
   },
 });

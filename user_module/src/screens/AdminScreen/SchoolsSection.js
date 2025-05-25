@@ -2,14 +2,16 @@
 /* eslint-disable no-shadow */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
+import {
+  View, Text, FlatList, StyleSheet, ActivityIndicator,
+  TouchableOpacity, Image, Dimensions, Alert
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import CONFIG from '../../redux/config/Config';
 
 const { BASE_URL } = CONFIG;
@@ -59,12 +61,14 @@ const SchoolsSection = () => {
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem('authToken');
-              await axios.delete(`${BASE_URL}/school/delete/${schoolId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
+              await axios.post(
+                `${BASE_URL}/school/delete-school`,
+                { id: schoolId }, // send id in body
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
               getSchools();
             } catch (err) {
-              Alert.alert('Error', 'Failed to delete school.');
+              console.log('Error', 'Failed to delete school.');
             }
           },
         },
@@ -72,9 +76,11 @@ const SchoolsSection = () => {
     );
   };
 
-  useEffect(() => {
-    getSchools();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      getSchools();
+    }, [])
+  );
 
   const schoolList = Array.isArray(schools) ? schools : schools ? [schools] : [];
 
@@ -230,25 +236,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 2,
   },
- actionRow: {
-  flexDirection: 'row',
-  marginTop: 12,
-  justifyContent: 'space-evenly',
-  width: '100%',
-},
+  actionRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    justifyContent: 'space-evenly',
+    width: '100%',
+  },
 
 
-actionBtn: {
-  flex: 1, // Equal width
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#238579',
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 16,
-  justifyContent: 'center',
-  marginHorizontal: 10,
-},
+  actionBtn: {
+    flex: 1, // Equal width
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#238579',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    justifyContent: 'center',
+    marginHorizontal: 10,
+  },
 
   actionBtnText: {
     color: '#fff',

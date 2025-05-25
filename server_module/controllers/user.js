@@ -38,7 +38,150 @@ exports.createUser = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error!" });
   }
 };
+//create users by admin with picture
+exports.createUserByAdmin = async (req, res) => {
+  console.log("inside createUserByAdmin");
+  try {
+    const { fullname, email, password, superAdmin, latitude, longitude } = req.body;
 
+    // Validate latitude and longitude
+    if (
+      longitude === undefined || latitude === undefined ||
+      longitude === '' || latitude === '' ||
+      isNaN(parseFloat(longitude)) || isNaN(parseFloat(latitude))
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Longitude and Latitude are required and must be valid numbers!",
+      });
+    }
+
+    const isNewUser = await User.isThisEmailInUse(email);
+
+    if (!isNewUser) {
+      return res.status(400).json({
+        success: false,
+        message: "This email is already in use, try signing in.",
+      });
+    }
+
+    let avatarUrl = null;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "userAvatars",
+        crop: "limit",
+        width: 600,
+        height: 600,
+      });
+      if (result?.secure_url) {
+        avatarUrl = result.secure_url;
+      }
+    }
+
+    const user = new User({
+      fullname,
+      email,
+      password,
+      superAdmin,
+      ...(avatarUrl && { avatar: avatarUrl }),
+      location: {
+        type: 'Point',
+        coordinates: [parseFloat(longitude), parseFloat(latitude)],
+      },
+    });
+
+    await user.save();
+    sendWelcomeEmail(user);
+
+    res.status(201).json({ success: true, user });
+  } catch (error) {
+    console.error("Error creating user:", error.message);
+    res.status(500).json({ success: false, message: "Server error!" });
+  }
+};
+
+exports.editUserByAdmin = async (req, res) => {
+  try {
+    const { id, fullname, email, superAdmin } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required!",
+      });
+    }
+
+    // Find the user first
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // Prepare update object
+    const updateData = { fullname, email, superAdmin };
+
+    // Handle image upload if file is present
+    if (req.file) {
+      // Delete previous image from Cloudinary if exists
+      if (user.avatar) {
+        const parts = user.avatar.split('/');
+        const fileName = parts[parts.length - 1];
+        const publicId = 'userAvatars/' + fileName.split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      // Upload new image
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "userAvatars",
+        crop: "limit",
+        width: 600,
+        height: 600,
+      });
+      if (result?.secure_url) {
+        updateData.avatar = result.secure_url;
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
+
+    res.status(200).json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Error editing user:", error.message);
+    res.status(500).json({ success: false, message: "Server error!" });
+  }
+};
+exports.deleteUserByAdmin = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the user first
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // Delete avatar from Cloudinary if exists
+    if (user.avatar) {
+      const parts = user.avatar.split('/');
+      const fileName = parts[parts.length - 1];
+      const publicId = 'userAvatars/' + fileName.split('.')[0];
+      await cloudinary.uploader.destroy(publicId);
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({ success: true, message: "User deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting user:", error.message);
+    res.status(500).json({ success: false, message: "Server error!" });
+  }
+};
 // User Sign In with SuperAdmin Check
 exports.userSignIn = async (req, res) => {
   try {

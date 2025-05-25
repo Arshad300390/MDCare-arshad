@@ -5,7 +5,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CONFIG from '../../redux/config/Config';
 
@@ -45,34 +45,37 @@ const ConsultantsSection = () => {
   };
 
   const handleDelete = async (consultantId) => {
-    Alert.alert(
-      'Delete Consultant',
-      'Are you sure you want to delete this consultant?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const token = await AsyncStorage.getItem('authToken');
-              await axios.delete(`${BASE_URL}/consultant/delete/${consultantId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              getConsultants();
-            } catch (err) {
-              Alert.alert('Error', 'Failed to delete consultant.');
-            }
-          },
+  Alert.alert(
+    'Delete Consultant',
+    'Are you sure you want to delete this consultant?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const token = await AsyncStorage.getItem('authToken');
+            await axios.post(
+              `${BASE_URL}/consultant/delete-consultant`,
+              { id: consultantId }, // send id in body
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            getConsultants();
+          } catch (err) {
+            console.log('Error', 'Failed to delete consultant.');
+          }
         },
-      ]
-    );
-  };
+      },
+    ]
+  );
+};
 
-  useEffect(() => {
+ useFocusEffect(
+  React.useCallback(() => {
     getConsultants();
-  }, []);
-
+  }, [])
+);
   const consultantList = Array.isArray(consultants) ? consultants : consultants ? [consultants] : [];
 
   if (loading) {

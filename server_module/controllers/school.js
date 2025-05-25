@@ -247,6 +247,7 @@ exports.editSchoolStatus = [
           location: waitingListSchool.location,
           specialties: waitingListSchool.specialties,
           phone: waitingListSchool.phone,
+          pic: waitingListSchool.pic,
         });
         await school.save();
         await Waitinglist.findByIdAndDelete(id);
@@ -265,9 +266,40 @@ exports.editSchoolStatus = [
   },
 ];
 
+// exports.deleteSchool = [
+//   //isAuth,
+//   //isSuperAdmin,
+//   async (req, res) => {
+//     try {
+//       const { id } = req.body;
+//       if (!id) {
+//         return res
+//           .status(400)
+//           .json({ success: false, message: "School ID is required!" });
+//       }
+
+//       const deletedSchool = await School.findByIdAndDelete(id);
+//       if (!deletedSchool) {
+//         return res
+//           .status(404)
+//           .json({ success: false, message: "School not found!" });
+//       }
+
+//       res.status(200).json({
+//         success: true,
+//         message: "School deleted successfully!",
+//         deletedSchool,
+//       });
+//     } catch (error) {
+//       console.error("Error deleting school:", error.message);
+//       res.status(500).json({ success: false, message: "Server error!" });
+//     }
+//   },
+// ];
+
 exports.deleteSchool = [
-  isAuth,
-  isSuperAdmin,
+  //isAuth,
+  //isSuperAdmin,
   async (req, res) => {
     try {
       const { id } = req.body;
@@ -277,12 +309,25 @@ exports.deleteSchool = [
           .json({ success: false, message: "School ID is required!" });
       }
 
-      const deletedSchool = await School.findByIdAndDelete(id);
-      if (!deletedSchool) {
+      // Find the school first to get the image URL
+      const school = await School.findById(id);
+      if (!school) {
         return res
           .status(404)
           .json({ success: false, message: "School not found!" });
       }
+
+      // Delete image from Cloudinary if it exists
+      if (school.pic) {
+        // Extract public ID from the URL
+        const parts = school.pic.split('/');
+        const fileName = parts[parts.length - 1];
+        const publicId = 'schoolPics/' + fileName.split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      // Now delete the school document
+      const deletedSchool = await School.findByIdAndDelete(id);
 
       res.status(200).json({
         success: true,
@@ -301,16 +346,48 @@ exports.editSchool = [
   isSuperAdmin,
   async (req, res) => {
     try {
-      const { id, name, location, description, specialties, rating } = req.body;
+      const { id, name, location, description, specialties, rating, phone } = req.body;
       if (!id) {
         return res
           .status(400)
           .json({ success: false, message: "School ID is required!" });
       }
 
+      // Find the school first to get the current image URL
+      const school = await School.findById(id);
+      if (!school) {
+        return res
+          .status(404)
+          .json({ success: false, message: "School not found!" });
+      }
+
+      // Prepare update object
+      const updateData = { name, location, description, specialties, rating, phone };
+
+      // Handle image upload if file is present
+      if (req.file) {
+        // Delete old image from Cloudinary if it exists
+        if (school.pic) {
+          const parts = school.pic.split('/');
+          const fileName = parts[parts.length - 1];
+          const publicId = 'schoolPics/' + fileName.split('.')[0];
+          await cloudinary.uploader.destroy(publicId);
+        }
+        // Upload new image
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: "schoolPics",
+          crop: "limit",
+          width: 800,
+          height: 800,
+        });
+        if (result?.secure_url) {
+          updateData.pic = result.secure_url;
+        }
+      }
+
       const updatedSchool = await School.findByIdAndUpdate(
         id,
-        { name, location, description, specialties, rating, phone },
+        updateData,
         { new: true }
       );
 
@@ -331,7 +408,6 @@ exports.editSchool = [
     }
   },
 ];
-
 exports.schoolLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
